@@ -1,0 +1,126 @@
+#include <iostream> //Libreria de entradas y salidas 
+#include <vector> // Se importa la libreria que permite listas dinamicas 
+#include <string> // Libreria de strings 
+
+using namespace std; // Con esto nos ahorramos estar poniendo std:: en las salidas 
+
+// Definimos el estandar de riesgo en el programa
+enum PerfilRiesgo{ BAJO, MEDIO, ALTO }; //enum sirve para enumerar datos personalizados, esto nos ayuda a evitar en casos de errores de tipeo o cosas por el estilo
+
+
+class RobotInversionista {
+private:
+    float saldo; // Atributo privado (seguridad financiera)
+    vector<float> historico; //Se guardan los depositos/retiros 
+    vector<float> histo_precios; //Precios del mercado 
+    PerfilRiesgo riesgo; 
+    
+    
+public:
+    string usuario;
+
+    // Constructor, __init__ en python.
+    RobotInversionista(string nombreU, float saldoI, PerfilRiesgo riesgoU) {
+        usuario = nombreU;
+        saldo = saldoI;
+        historico.push_back(saldoI); //Se guarda el saldo inicial. push_back es similar al .append()
+        riesgo = riesgoU; 
+    }
+    
+    // Método para  que simulemos que el robot "ve" un nuevo precio en el mercado
+    void registrarPrecio(float precio) {
+        histo_precios.push_back(precio);
+    }
+    
+
+    void depositar(float cantidad) {
+        saldo += cantidad;
+        historico.push_back(cantidad);
+        cout << "Deposito de " << cantidad << " realizado." << endl;
+    }
+
+    void retirar(float cantidad) {
+        if (cantidad > saldo) {
+            cout << "Error: Fondos insuficientes para " << usuario << endl;
+        } else {
+            saldo -= cantidad;
+            cout << "Retiro realizado. Saldo actual: " << saldo << "€" << endl;
+        }
+    }
+    
+    void mostrar_historico(){
+        cout << "Historias de movimientos de" << usuario << "---"<<endl;
+        for (int i = 0; i < historico.size(); i++) { //.size() equivalente al len en python, pero hace una resta entre la dirección final y la direccion inicial (Dirección de memoria)
+            cout << "movimiento" << i << ":" << historico[i] << "€" << endl;
+        }
+    }
+    
+    float calcularSumaTotal() {
+        float suma = 0;
+        for (int i = 0; i < historico.size(); i++) {
+            suma += historico[i];
+        }
+        return suma;
+    }   
+    
+    float ObtenerBalancePromedio() {
+        if (historico.size() == 0) return 0; 
+        return calcularSumaTotal() / historico.size();
+    }
+    
+    //Analsis
+    string analizarMercado(){
+        if(histo_precios.size() < 3) {
+            return "Esperar, faltan datos de mercado";
+        };
+        
+        //Analizamos la tendencia reciente con los ultimos dos datos
+        float precio_actual = histo_precios.back(); // .back() es el último elemento
+        float precio_anterior = histo_precios[histo_precios.size() - 2];
+        
+        //Tendencia 
+        bool tendencia_alcista = (precio_actual > precio_anterior); 
+        
+        //Emergencia 
+        float caida = (precio_anterior - precio_actual) / precio_anterior;
+        if (caida >= 0.10) {
+        return "VENTA DE EMERGENICA, caída del mercado";
+        };
+    
+        //Tendencia x perfil de riesgo 
+        if (tendencia_alcista) {
+            if (riesgo == ALTO || riesgo == MEDIO){
+                return "COMPRAR, fuerte tendencia alcista";
+            }else {
+                return "ESPERAR, no tan estable para un perfil bajista";
+            };
+            
+        }else {
+            if (riesgo == BAJO){
+                return "VENDER";
+            }else {
+                return "MANTENER, soportando la volatilidad";
+            };
+        };
+    };
+    
+};
+
+int main() {
+    // Creamos al robot 
+    RobotInversionista miBot("Matt", 1000.0, ALTO);
+    
+    //miBot.depositar(500.0);
+    //miBot.depositar(300.0);
+    
+    //cout << "Suma total de movimientos: " << miBot.calcularSumaTotal() << "€" << endl;
+    //cout << "Promedio de movimientos: " << miBot.obtenerBalancePromedio() << "€" << endl;
+    miBot.registrarPrecio(200);
+    cout << miBot.analizarMercado() << endl;
+    miBot.registrarPrecio(105);
+    cout << miBot.analizarMercado() << endl;
+    miBot.registrarPrecio(90);
+    cout << miBot.analizarMercado() << endl;
+    
+    return 0;
+};
